@@ -9,7 +9,7 @@ use Illuminate\Foundation\Auth\AuthenticatesUsers;
 use Auth;
 use App\User;
 use Abraham\TwitterOAuth\TwitterOAuth;
-use Storage; 
+use Storage;
 
 class ProfileController extends Controller
 {
@@ -17,12 +17,8 @@ class ProfileController extends Controller
   public function profile()
   {
     $user = Auth::user();
-    // $groups = GroupUser::groupsOnUser(Auth::id());
-    // $groups = $user->groups;//ログイン中のユーザーの所属グループを取得。
-    // dd($groups);
 
     return view('user.profile.profile',['user' => $user]);
-    // return view('user.home.guest',['user' => $user ,'users' => $users ]);//テスト用
   }
 
   public function edit()
@@ -45,8 +41,6 @@ class ProfileController extends Controller
     }
 
     if(isset($request['avatar'])) {
-      // $path = $request->file('avatar')->store('/public/image');
-      // $user->avatar = basename($path);
       $deleteavt = basename($user->avatar);
       $disk = Storage::disk('s3');
       $disk->delete('/', $deleteavt);
@@ -54,11 +48,6 @@ class ProfileController extends Controller
       $user->avatar = Storage::disk('s3')->url($path);
     }
 
-    // $profile_form = $request->all();
-    // $profile_form = $profile_form + array('avatar'=>$user->avatar);
-    // dd($profile_form);
-
-    // $user->fill($profile_form)->save();
     $user->save();
     return redirect('/');
   }

@@ -14,7 +14,7 @@ use Abraham\TwitterOAuth\TwitterOAuth;
 use App\Group;
 use App\Message;
 use Illuminate\Support\Facades\Log;
-use Storage; 
+use Storage;
 
 class GroupController extends Controller
 {
@@ -23,8 +23,7 @@ class GroupController extends Controller
     {
       $user = Auth::user();
       $users = $user->mutual_follows();
-      // $users = User::all();
-      // return view('user.group.create',['user'=>$user,'users'=>$users]);
+
       return view('user.group.create',['users'=>$users]);
     }
 
@@ -44,9 +43,7 @@ class GroupController extends Controller
       $group->user_id = $me->id;
 
       if(isset($request['image'])) {
-        // $path = $request->file('avatar')->store('/public/image');
-        // $group->image = basename($path);
-        
+
         $path = Storage::disk('s3')->putFile('/',$request['image'],'public');
         $group->image = Storage::disk('s3')->url($path);
 
@@ -55,11 +52,10 @@ class GroupController extends Controller
       $group->save();
 
       $user = new User;
-      // $user = $request->user_id;この2行はダメな例。$userのidカラムに$request->user_idを代入できていない。↓が正しい。
-      // $user = User::where('id',$request->user_id);エラー：Call to undefined method Illuminate\Database\Eloquent\Builder::groups()
+
       $hash = Hash::make($me->name);
       $nickname = substr($hash,-10);
-      // Log::debug($nickname);
+
       $me->groups()->attach($group->id, ['nickname' => $nickname]);
 
       foreach($request->user_id as $item){
@@ -78,9 +74,7 @@ class GroupController extends Controller
   public function talk(Request $request)
   {
     $group = Group::find($request->id);
-    // $users = $group->users()->get();
-    // $messages = Message::where('group_id',$request->id)->get();
-    // dd($messages);
+
     return view('user.group.talk',['group' => $group]);
   }
 
@@ -107,7 +101,7 @@ class GroupController extends Controller
     unset($form['_token']);
 
     unset($form['image']);
-    // Log::info("★★★★★★★★★");
+
     $message->user_id = $user->id;
     $message->fill($form);
     $message->save();
@@ -117,9 +111,9 @@ class GroupController extends Controller
 
   public function getMessage(Request $request)
   {
-    // $messages = Message::where('group_id','1')->get();
+
     $id = $request->input('id');
-    // $id = 3;
+
     $messageRecords = Message::where('group_id',$id)->get();
     $group = Group::find($id);
     $members = $group->users()->get();
@@ -128,16 +122,14 @@ class GroupController extends Controller
       $nName[] = $member->pivot->nickname;
     }
     $nickname = array_combine($memId,$nName);
-    // Log::debug($nickname);
 
     $messages = [];
 
     foreach($messageRecords as $messageRecord)
     {
 
-      // $ass = $messageRecord->user_id;
       $name = $nickname[$messageRecord->user_id];
-      // Log::debug($name);
+
       $item = [
         'name' => $name,
         'message' => $messageRecord->message,
@@ -149,7 +141,6 @@ class GroupController extends Controller
     //モデルの関連づけメソッドは()いらない。✖︎user()
     asort($nName);
     $json = ["messages" => $messages, "names" => $nName];
-    // dd($json);
     return response()->json($json);
   }
 
@@ -160,16 +151,8 @@ class GroupController extends Controller
     $message = new Message;
 
     $message->user_id = $user->id;
-    // // $message_req = filter_input(INPUT_POST, 'message');
-    // $message_req = $request->all();
 
-    // Log::debug($request);
-    // $message->message = $message_req->message;//$message_reqが受け取れてない可能性
     $message->group_id = 1;
-    // // $message->fill($form);
-    // $message->save();
-    // Log::info("★★★★★★★★★");
-    // Log::info($messagef);
 
      ini_set('display_errors','no');
       if($_POST){
@@ -182,17 +165,9 @@ class GroupController extends Controller
 
     public function sendC(Request $request)
   {
-    // $file_tmp  = $_FILES["image"]["tmp_name"];
-    // $file_save = "public/image" . $_FILES["image"]["name"];
-    // $result = @move_uploaded_file($file_tmp, $file_save);
 
-    // if ( $result === true ) {
-    //     $message->image_path = basename($file_save);
-    // } else {
-    //     echo "UPLOAD NG";
-    // }
     $upfile = $request;
-    // Log::info(var_dump($request));
+
     $this->validate($request, ['message'=>'required']);
     $user = Auth::user();
     $message = new Message;
@@ -205,11 +180,9 @@ class GroupController extends Controller
     $message->message = $messagef;
 
     $form = $request->all();
-    // Log::debug($message);
+
     if (isset($form['image'])) {
-      // \Log::info($image);
-      // $path = $request->file('image')->store('public/image');
-      // $message->image_path = basename($path);
+
         $path = Storage::disk('s3')->putFile('/',$request['image'],'public');
         $message->image_path = Storage::disk('s3')->url($path);
 
@@ -218,21 +191,21 @@ class GroupController extends Controller
     }
 
     $message->save();
-    
+
     $count = $message->where('group_id',$_POST['group_id'])->count();
           if ($count > 50) {
             $message50 = DB::table('messages')
             ->where('group_id', $_POST['group_id'])
             ->orderBy('id','desc')
-            // ->take(3)->pluck('id')->min();
+
             ->take(50);
             $deleteid = $message50->pluck('id')->min();
-  
+
             $messageins = message::where('group_id',$_POST['group_id']);
             $deletemessage = $messageins->where('id','<',$deleteid);
-            
+
             $image = $deletemessage->pluck('image_path');
-            
+
             foreach($image as $item){
               if($item !== null){
                 $item = basename($item);
@@ -240,7 +213,7 @@ class GroupController extends Controller
                 $disk->delete('/', $item);
               }
             }
-            
+
             $deletemessage->delete();
           }
   }
@@ -250,12 +223,6 @@ class GroupController extends Controller
     $user = Auth::user();
     $group = Group::find($request->id);
     $members = $group->users()->get();
-    // dd($group);
-    // if (empty($group)) {
-    //   abort(404);
-    // }
-
-
 
     foreach($members as $member){
       $membersnames[] = $member->pivot->nickname;
@@ -263,10 +230,8 @@ class GroupController extends Controller
       Log::debug($membersnames);
     }
 
-    // $users = $group->users;
     $users = $user->mutual_follows();
 
-    // dd($members);
     return view('user.group.edit', ['group_form' => $group,'user' => $user, 'members'=>$members, 'users' =>$users]);
   }
 
@@ -274,8 +239,7 @@ class GroupController extends Controller
   {
     $this->validate($request, Group::$rules);
     $group = Group::find($request->id);
-    // $group_form = $request->all();
-    // unset($group_form['_token']);
+
     $user = new User;//ユーザーを新しく作成する時に使うのが、このインスタンス化のコード。
 
     if(!empty($request->member_id)){
@@ -288,13 +252,13 @@ class GroupController extends Controller
     if(!empty($request->user_id)){
       foreach($request->user_id as $value){
         $user->id=$value;
-        // dd($value);
+
         $user->groups()->attach($group->id);
       }
     }
 
     $group->name = $request->name;
-    // $group->fill($group_form)->save();
+
     $group->save();
 
     return redirect('home');
@@ -305,37 +269,36 @@ class GroupController extends Controller
    $group = new Group;
    $group->id = $request->id;
    $user = Auth::user();
-   //上記は追記コード
-   
+
    $user->groups()->detach($group->id);
 
    $groupuser = $group->users()->get();
-    
+
     if($groupuser->count() == 0){
       $deletegrp = Group::find($group->id);
-      
+
       $deleteimg = basename($deletegrp->image);
       $disk = Storage::disk('s3');
       $disk->delete('/', $deleteimg);
-      // Message::where('group_id',$group->id)->delete();
+      
       $deletemsg = Message::where('group_id',$group->id);
       $msgimg = Message::where('group_id',$request->id)->get();
-      
+
         foreach($msgimg as $item){
-            
+
               Log::debug($item);
               $deleteimg = basename($item->image_path);
               Log::debug($msgimg);
               $disk = Storage::disk('s3');
               $disk->delete('/', $deleteimg);
-             
+
             }
-      
-            
+
+
       $deletemsg->delete();
-      $deletegrp->delete(); 
+      $deletegrp->delete();
     }
-   
+
   return redirect('home');
   }
 }
