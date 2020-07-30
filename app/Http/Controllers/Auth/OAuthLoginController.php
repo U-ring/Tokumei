@@ -13,7 +13,7 @@ use Abraham\TwitterOAuth\TwitterOAuth;
 
 class OAuthLoginController extends Controller //←Controllerが規定クラス
 {
-  
+
   public function twitterCallback(Request $request)
     {
         $oauth_token = session('oauth_token');
@@ -47,7 +47,7 @@ class OAuthLoginController extends Controller //←Controllerが規定クラス
         $twitter_user_info = $twitter_user->get('account/verify_credentials');
         // dd($twitter_user_info);
     }
-  
+
    //ログインボタンからリンク
    public function socialLogin($social)
    {
@@ -66,13 +66,13 @@ class OAuthLoginController extends Controller //←Controllerが規定クラス
        }
         // var_dump($userSocial);//ユーザー情報を全て受け取るコードのすぐ下でvar_dumpしている。
         // exit();
-        
+
        //メールアドレスで登録状況を調べる
        $user = User::where(['email' => $userSocial->getEmail()])->first();//Facebookと同じメアドのAuthユーザーでログインしてしまった。
-      
+
        //メールアドレス登録の有無で条件分岐
        if($user){
-           //email登録がある場合の処理            
+           //email登録がある場合の処理
            //ログイン
            Auth::login($user);
        }else{
@@ -80,18 +80,7 @@ class OAuthLoginController extends Controller //←Controllerが規定クラス
            $newuser = new User;
            $newuser->name = $userSocial->getName();
            $newuser->email = $userSocial->getEmail();
-       
-           // 画像の取得
-        //   $img = file_get_contents($userSocial->avatar_original);
-        //   if ($img !== false) {
-        //       $file_name = $userSocial->id . '_' . uniqid() . '.jpg';
-        //       Storage::put('public/profile_images/' . $file_name, $img);
-        //       $newuser->avatar = $file_name;
-        //   }
-        
-        //   $newuser->avatar=$userSocial->avatar;
-        //   $newuser->avatar=$userSocial['avatar'];
-        
+
            //sns特有の情報を条件分岐で取得する
            switch ($social) {
                case "facebook":
@@ -104,12 +93,12 @@ class OAuthLoginController extends Controller //←Controllerが規定クラス
                    $newuser->twitter_id = $userSocial->getId();  ////ここまで、変更。
                break;
            }
-           //ユーザ作成     
+           //ユーザ作成
            $newuser->save();
            //ログイン
            Auth::login($newuser);
        }
-       
+
        //twitterアクション挿入
        $twitter = new TwitterOAuth(
                 config('twitter.consumer_key'),
@@ -120,20 +109,20 @@ class OAuthLoginController extends Controller //←Controllerが規定クラス
             $token = $twitter->oauth('oauth/request_token', array(
                 'oauth_callback' => config('twitter.callback_url')
             ));
-    
+
             # 認証画面で認証を行うためSessionに入れる
             session(array(
                 'oauth_token' => $token['oauth_token'],
                 'oauth_token_secret' => $token['oauth_token_secret'],
             ));
-    
+
             # 認証画面へ移動させる
             ## 毎回認証をさせたい場合： 'oauth/authorize'
             ## 再認証が不要な場合： 'oauth/authenticate'
             $url = $twitter->url('oauth/authenticate', array(
                 'oauth_token' => $token['oauth_token']
             ));
-       
+
        //followアクション挿入
        $twitter = new TwitterOAuth(
             config('twitter.consumer_key'),
@@ -142,7 +131,7 @@ class OAuthLoginController extends Controller //←Controllerが規定クラス
             config('twitter.access_token_secret')
         );
         //config/service.phpから('')を呼んでいる。そこになければ.envから呼ぶ。
-      
+
       $params = [
     'cursor' => '-1',
     'count' => '20',
@@ -151,36 +140,22 @@ class OAuthLoginController extends Controller //←Controllerが規定クラス
     'user_id' => Auth::user()->twitter_id,
       ];
       $followers = [];
- 
+
         do {
           $response = $twitter->get('friends/list', $params);
-          
+
           if (!isset($response->users)) {
               echo 'TwitterAPIの制限がかかっちゃってる！ごめんなさい！' . PHP_EOL;
                 break;
           }
-         // \Log::error($response->users); 
-         // \Log::channel('errorlog')->getLogger()->error($response->users);
+
           $followers = array_merge($followers, $response->users);
-        //   $params['cursor'] = $response->next_cursor_str;
-        //   $response = $twitter->get('friends/list', $params);
-          
-        //   if (!isset($response)) {
-        //       echo 'TwitterAPIの制限がかかっちゃってる！ごめんなさい！' . PHP_EOL;
-        //       //break;
-        //   }
-          
-        // $followers = array_merge($followers, $response->users);
-          
+
         } while ($params['cursor'] = $response->next_cursor_str);
        //↑ $params['cursor'] に代入しつつカーソルの値をループ条件に使う
-       //\Log::channel('errorlog')->getLogger()->error($followers);
-      // return view('home',["followers" => $followers]);
        
        //topページにリダイレクト
-       return redirect('home'); 
+       return redirect('home');
    }
-   
+
 }
-
-

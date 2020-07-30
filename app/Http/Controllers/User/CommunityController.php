@@ -11,7 +11,7 @@ use App\Community;
 use App\Cmessage;
 use Illuminate\Support\Facades\Log;
 use DB;
-use Storage; 
+use Storage;
 
 class CommunityController extends Controller
 {
@@ -20,8 +20,7 @@ class CommunityController extends Controller
       {
         $user = Auth::user();
         $users = $user->mutual_follows();
-        // $users = User::all();
-        // return view('user.group.create',['user'=>$user,'users'=>$users]);
+
         return view('user.community.create',['users'=>$users]);
       }
 
@@ -35,14 +34,12 @@ class CommunityController extends Controller
           $form = $request->name;
 
           $community->name = $form;
-          // dd($request);
 
           $me = Auth::user();
           $community->user_id = $me->id;
 
           if(isset($request['image'])) {
-            // $path = $request->file('avatar')->store('/public/image');
-            // $community->image = basename($path);
+
             $path = Storage::disk('s3')->putFile('/',$request['image'],'public');
             $community->image = Storage::disk('s3')->url($path);
 
@@ -51,8 +48,6 @@ class CommunityController extends Controller
           $community->save();
 
           $user = new User;
-          // $user = $request->user_id;この2行はダメな例。$userのidカラムに$request->user_idを代入できていない。↓が正しい。
-          // $user = User::where('id',$request->user_id);エラー：Call to undefined method Illuminate\Database\Eloquent\Builder::groups()
 
           $me->communities()->attach($community->id);
           foreach($request->user_id as $item){
@@ -89,12 +84,11 @@ class CommunityController extends Controller
         {
           $this->validate($request, Community::$rules);
           $community = Community::find($request->id);
-          // $group_form = $request->all();
-          // unset($group_form['_token']);
-          $user = new User;//ユーザーを新しく作成する時に使うのが、このインスタンス化のコード。
+
+          $user = new User;
 
           if(!empty($request->member_id)){
-            foreach($request->member_id as $value){//['member_id']これは連想配列の書き方。
+            foreach($request->member_id as $value){//['member_id']これは連想配列の書き方
               $user->id=$value;
               $user->communities()->detach($community->id);
             }
@@ -103,14 +97,13 @@ class CommunityController extends Controller
           if(!empty($request->user_id)){
             foreach($request->user_id as $value){
               $user->id=$value;
-              // dd($value);
+
               $user->communities()->attach($community->id);
             }
           }
 
           if(isset($request['image'])) {
-            // $path = $request->file('avatar')->store('/public/image');
-            // $community->image = basename($path);
+
             $deleteimg = basename($community->image);
             $disk = Storage::disk('s3');
             $disk->delete('/', $deleteimg);
@@ -118,13 +111,8 @@ class CommunityController extends Controller
             $community->image = Storage::disk('s3')->url($path);
           }
 
-          // if(isset($request['image'])) {
-          //   $path = $request->file('image')->store('/public/image');
-          //   $community->image = basename($path);
-          // }
-
           $community->name = $request->name;
-          // $group->fill($group_form)->save();
+
           $community->save();
 
           return redirect('home');
@@ -135,17 +123,17 @@ class CommunityController extends Controller
          $community = new Community;
          $community->id = $request->id;
          $user = Auth::user();
-         
+
          $user->communities()->detach($community->id);
-         
+
         $communityuser = $community->users()->get();
-        
+
           if($communityuser->count() == 0){
           $deletecmnt = Community::find($community->id);
           $deleteimg = basename($deletecmnt->image);
           $disk = Storage::disk('s3');
           $disk->delete('/', $deleteimg);
-          
+
           $deletemsg = Cmessage::where('community_id',$community->id);
           $msgimg = Cmessage::where('community_id',$community->id)->get();
           foreach($msgimg as $item){
@@ -155,10 +143,10 @@ class CommunityController extends Controller
               $disk = Storage::disk('s3');
               $disk->delete('/', $deleteimg);
             }
-          
+
           $deletemsg->delete();
-          // Cmessage::where('community_id',$community->id)->delete();
-          $deletecmnt->delete(); 
+
+          $deletecmnt->delete();
           }
 
          return redirect('home');
@@ -167,7 +155,7 @@ class CommunityController extends Controller
         public function talk(Request $request)
         {
           $community = Community::find($request->id);
-           
+
           $message = new Cmessage;
           $count = $message->where('community_id',$request->id)->count();
 
@@ -176,7 +164,6 @@ class CommunityController extends Controller
 
         public function getMessageC(Request $request)
         {
-          // $messages = Message::where('group_id','1')->get();
           $id = $request->input('id');
           $messageRecords = Cmessage::where('community_id',$id)->get();
 
@@ -196,7 +183,7 @@ class CommunityController extends Controller
           //モデルの関連づけメソッドは()いらない。✖︎user()
 
           $json = ["messages" => $messages];
-          // dd($json);
+
           return response()->json($json);
         }
 
@@ -216,33 +203,31 @@ class CommunityController extends Controller
         $message->message = $messagef;
 
         $form = $request->all();
-        // Log::debug($request->image);
+
         if (isset($form['image'])) {
-          // \Log::info($image);
-          // $path = $request->file('image')->store('public/image');
-          // $message->image_path = basename($path);
+
           $path = Storage::disk('s3')->putFile('/',$request['image'],'public');
           $message->image_path = Storage::disk('s3')->url($path);
         } else {
           $message->image_path = null;
         }
-  
+
         $message->save();
-        
+
         $count = $message->where('community_id',$_POST['community_id'])->count();
           if ($count > 50) {
             $message50 = DB::table('cmessages')
             ->where('community_id', $_POST['community_id'])
             ->orderBy('id','desc')
-            // ->take(3)->pluck('id')->min();
+            
             ->take(50);
             $deleteid = $message50->pluck('id')->min();
-  
+
             $messageins = Cmessage::where('community_id',$_POST['community_id']);
             $deletemessage = $messageins->where('id','<',$deleteid);
-            
+
             $image = $deletemessage->pluck('image_path');
-            
+
             foreach($image as $item){
               if($item !== null){
                 $item = basename($item);
@@ -250,7 +235,7 @@ class CommunityController extends Controller
                 $disk->delete('/', $item);
               }
             }
-            
+
             $deletemessage->delete();
           }
       }
