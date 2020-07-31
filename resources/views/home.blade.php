@@ -30,7 +30,7 @@
                <img src="{{ $group->image }}" class="rounded-circle" width="50" height="50">
               </div>
              </div>
-            
+
            </div>
             </td>
             <td>
@@ -40,7 +40,7 @@
             </td>
             <td>
              <div class="d-flex flex-column px-2">
-              
+
               <div>
                 <form action="{{ action('User\GroupController@withdraw')}}" method="post">
                 @csrf
@@ -69,12 +69,12 @@
             <div class="my-auto mx-1" width="25%">
              <div class="my-auto" style="width:60px;height:60px;">
               <div class="rounded-circle shadow-lg p-1">
-               <img src="https://tokumeikaigi.s3.us-east-2.amazonaws.com/unknown.jpg" class="rounded-circle" width="50" height="50">
+               @include('parts.nonAvatar')
               </div>
              </div>
-            
+
            </div>
-            </td>   
+            </td>
             <td>
               <div style="width:50px;">
                 <h class="font-weight-bold">{{ $group->name }}</h>
@@ -82,7 +82,7 @@
             </td>
             <td>
              <div class="d-flex flex-column px-2">
-              
+
               <div>
                <form action="{{ action('User\GroupController@withdraw')}}" method="post">
                  @csrf
@@ -145,7 +145,7 @@
           </table>
          </div>
         @elseif(!isset($community->image))
-         <div class="d-flex flex-row pb-3"> 
+         <div class="d-flex flex-row pb-3">
           <table>
            <thead>
             <tr>
@@ -159,7 +159,7 @@
             <div class="my-auto mx-1" width="25%">
              <div class="my-auto" style="width:60px;height:60px;">
               <div class="rounded-circle shadow-lg p-1">
-               <img src="https://tokumeikaigi.s3.us-east-2.amazonaws.com/unknown.jpg" class="rounded-circle" width="50" height="50">
+               @include('parts.nonAvatar')
               </div>
              </div>
            </div>

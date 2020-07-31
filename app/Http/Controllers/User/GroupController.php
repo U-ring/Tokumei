@@ -37,16 +37,13 @@ class GroupController extends Controller
       $form = $request->name;
 
       $group->name = $form;
-      // dd($request);
 
       $me = Auth::user();
       $group->user_id = $me->id;
 
       if(isset($request['image'])) {
-
         $path = Storage::disk('s3')->putFile('/',$request['image'],'public');
         $group->image = Storage::disk('s3')->url($path);
-
       }
 
       $group->save();
@@ -280,7 +277,7 @@ class GroupController extends Controller
       $deleteimg = basename($deletegrp->image);
       $disk = Storage::disk('s3');
       $disk->delete('/', $deleteimg);
-      
+
       $deletemsg = Message::where('group_id',$group->id);
       $msgimg = Message::where('group_id',$request->id)->get();
 

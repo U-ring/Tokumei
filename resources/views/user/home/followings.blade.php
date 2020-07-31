@@ -25,7 +25,7 @@
            </tr>
            @elseif(!isset($user->avatar))
            <tr>
-            <td><div class="rounded-circle shadow-lg p-1"><img src="https://tokumeikaigi.s3.us-east-2.amazonaws.com/unknown.jpg" class="rounded-circle" width="50" height="50"></div></td>
+            <td><div class="rounded-circle shadow-lg p-1">@include('parts.nonAvatar')</div></td>
             <td>{{ $user->name }}</td>
             <td>{{ $user->text }}</td>
             <td><div>@include('parts.follow_button',['user'=>$user])</div></td>

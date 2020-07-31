@@ -6,7 +6,7 @@
  <div class="p-10 row">
   <p class="display-5 font-weight-bold py-4 mx-auto">フレンドと有意義なコミュニケーションを楽しみましょう。</p>
  </div>
- 
+
  <div class="d-flex justify-content-between flex-wrap">
        @foreach($friends as $friend)
         @if(isset($friend->avatar))
@@ -35,7 +35,7 @@
             <td class="align-bottom">
              <div class="my-auto ml-3" style="width:50px;">
                <h>{{ $friend->text }}</h>
-             </div>  
+             </div>
             </td>
             <td class="align-baseline">
              <div class="d-flex flex-column px-2">
@@ -65,18 +65,18 @@
             <div class="my-auto mx-1" width="25%">
              <div class="my-auto" style="width:60px;height:60px;">
               <div class="rounded-circle shadow-lg p-1">
-               <img src="https://tokumeikaigi.s3.us-east-2.amazonaws.com/unknown.jpg" class="rounded-circle" width="50" height="50">
+               @include('parts.nonAvatar')
               </div>
              </div>
              <div style="width:50px;">
                 <h class="font-weight-bold">{{ $friend->name }}</h>
              </div>
            </div>
-            </td>   
+            </td>
             <td class="align-bottom">
              <div class="my-auto ml-3" style="width:50px;">
                <h>{{ $friend->text }}</h>
-             </div>  
+             </div>
             </td>
             <td class="align-baseline">
              <div class="d-flex flex-column px-2">
@@ -97,7 +97,7 @@
        @endif
        @endforeach
   </div>
-  
+
 
  <div class="p-10 row">
   <p class="display-5 font-weight-bold py-4 mx-auto">まだフレンドではない仲間を発見しましょう。</p>
@@ -112,7 +112,7 @@
         <th></th>
         <th></th>
       </tr>
-     </thead> 
+     </thead>
         @foreach($users as $user)
          @if(isset($user->avatar))
          <tr>
@@ -123,10 +123,10 @@
          </tr>
          @elseif(!isset($user->avatar))
          <tr>
-          <td style="width:60px;height:60px;"><div class="rounded-circle shadow-lg p-1"><img src="https://tokumeikaigi.s3.us-east-2.amazonaws.com/unknown.jpg" class="rounded-circle" width="50" height="50"></div></td>
+          <td style="width:60px;height:60px;"><div class="rounded-circle shadow-lg p-1">@include('parts.nonAvatar')</div></td>
           <td width="25%">{{ $user->name }}</td>
           <td>{{ $user->text }}</td>
-          <td><div>@include('parts.follow_button',['user'=>$user])</div></td>          
+          <td><div>@include('parts.follow_button',['user'=>$user])</div></td>
          </tr>
          @else
         @endif
